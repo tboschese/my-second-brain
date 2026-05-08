@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Segundo Cérebro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <svg class="logo-spark" width="12" height="12" viewBox="0 0 14 14">
+          <path d="M7 1.2l1.5 4.3L12.8 7l-4.3 1.5L7 12.8l-1.5-4.3L1.2 7l4.3-1.5z" fill="#a45c2c"/>
+        </svg>
+        <span class="logo-text">Segundo Cérebro</span>
+      </div>
+      <button id="btnOpenApp" class="btn-icon" title="Abrir no app">
+        <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+          <path d="M7 3H4a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1v-3M11 3h4m0 0v4m0-4L8 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Page detection card -->
+    <div id="pageCard" class="page-card">
+      <div id="pageIconWrap" class="page-icon-wrap"></div>
+      <div class="page-info">
+        <div id="pageTypeLabel" class="page-type-label">Detectando…</div>
+        <div id="pageTitle" class="page-title"></div>
+      </div>
+    </div>
+
+    <!-- Capture area — dynamically populated by popup.js -->
+    <div id="captureArea"></div>
+
+    <!-- Recent captures -->
+    <div class="section-header">
+      <span>CAPTURADO RECENTEMENTE</span>
+      <button id="btnViewAll" class="btn-view-all">Ver tudo</button>
+    </div>
+    <div id="recentList" class="recent-list">
+      <div class="empty-state">Nenhum item ainda.</div>
+    </div>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

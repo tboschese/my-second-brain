@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Segundo Cérebro",
+  "version": "1.0.0",
+  "description": "Capture vídeos, páginas do Kindle e artigos para o seu Segundo Cérebro.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "*://read.amazon.com/*",
+    "*://www.youtube.com/*",
+    "*://*/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Segundo Cérebro"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:3000/*"],
+      "js": ["content/webapp-bridge.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://read.amazon.com/*"],
+      "js": ["content/kindle.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://www.youtube.com/watch*"],
+      "js": ["content/youtube.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
