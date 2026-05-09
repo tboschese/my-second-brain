@@ -32,7 +32,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || '';
 
-  const isKindle  = url.includes('read.amazon.com');
+  // Match Kindle Cloud Reader on any Amazon TLD (read.amazon.com,
+  // read.amazon.com.br, read.amazon.co.uk, read.amazon.de, etc.)
+  const isKindle  = /^https?:\/\/read\.amazon\./i.test(url);
   const isYouTube = url.includes('youtube.com/watch');
   const type      = isKindle ? 'kindle' : isYouTube ? 'youtube' : 'article';
 
@@ -98,7 +100,10 @@ async function renderYouTubeCapture(area, tab) {
 // Kindle ──────────────────────────────────────────────────────────
 async function renderKindleCapture(area, tab) {
   const { kindleSessions = {} } = await chrome.storage.local.get('kindleSessions');
-  const bookTitle = tab?.title?.replace(' - Kindle Cloud Reader','').trim() || 'Livro atual';
+  // Title varies by locale: "- Kindle Cloud Reader" (en),
+  // "- Leitor Kindle na Nuvem" (pt-BR), "- Kindle in der Cloud" (de), etc.
+  // Strip everything after the last " - " separator.
+  const bookTitle = (tab?.title || '').replace(/\s*[-–—]\s*[^-–—]+$/, '').trim() || 'Livro atual';
   const session   = kindleSessions[bookTitle];
   const pageCount = session?.pages?.length || 0;
   const { kindleAutoCapture = false } = await chrome.storage.local.get('kindleAutoCapture');

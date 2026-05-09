@@ -13,6 +13,17 @@
   "host_permissions": [
     "http://localhost:3000/*",
     "*://read.amazon.com/*",
+    "*://read.amazon.com.br/*",
+    "*://read.amazon.co.uk/*",
+    "*://read.amazon.de/*",
+    "*://read.amazon.fr/*",
+    "*://read.amazon.es/*",
+    "*://read.amazon.it/*",
+    "*://read.amazon.co.jp/*",
+    "*://read.amazon.com.au/*",
+    "*://read.amazon.com.mx/*",
+    "*://read.amazon.in/*",
+    "*://read.amazon.ca/*",
     "*://www.youtube.com/*",
     "*://*/*"
   ],
@@ -30,7 +41,20 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["*://read.amazon.com/*"],
+      "matches": [
+        "*://read.amazon.com/*",
+        "*://read.amazon.com.br/*",
+        "*://read.amazon.co.uk/*",
+        "*://read.amazon.de/*",
+        "*://read.amazon.fr/*",
+        "*://read.amazon.es/*",
+        "*://read.amazon.it/*",
+        "*://read.amazon.co.jp/*",
+        "*://read.amazon.com.au/*",
+        "*://read.amazon.com.mx/*",
+        "*://read.amazon.in/*",
+        "*://read.amazon.ca/*"
+      ],
       "js": ["content/kindle.js"],
       "run_at": "document_idle"
     },

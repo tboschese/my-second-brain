@@ -12,7 +12,10 @@
 
   let autoCapture  = false;
   let pageIndex    = 0;
-  const bookTitle  = document.title.replace(' - Kindle Cloud Reader', '').trim();
+  // Title varies by locale: "Book Title - Kindle Cloud Reader" (en),
+  // "Livro - Leitor Kindle na Nuvem" (pt-BR), etc.
+  // Strip the trailing " - <something>" suffix.
+  const bookTitle = (document.title || '').replace(/\s*[-–—]\s*[^-–—]+$/, '').trim();
 
   // ── Text extraction ─────────────────────────────────────────────
   function extractPageText() {
