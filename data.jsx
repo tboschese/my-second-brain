@@ -67,7 +67,7 @@ const store = {
       pages:     input.pages ?? null,
       chapters:  input.chapters ?? null,
       tags:      input.tags || [],
-      source:    input.source || 'upload',  // 'upload' | 'kindle' | 'capture'
+      source:    input.source || 'upload',  // 'upload' | 'youtube' | 'podcast' | 'article'
       sourceUrl: input.sourceUrl || null,
       fileName:  input.fileName || null,
       fileSize:  input.fileSize ?? null,

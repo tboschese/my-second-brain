@@ -1,11 +1,11 @@
 # Segundo Cérebro
 
-Um app de "segundo cérebro" para consultar PDFs, vídeos do YouTube, páginas do Kindle e artigos com IA — respostas conversacionais com citações vivas que apontam para o trecho original.
+Um app de "segundo cérebro" para consultar PDFs, vídeos do YouTube, episódios de podcast e artigos com IA — respostas conversacionais com citações vivas que apontam para o trecho original.
 
 Composto por duas peças que andam juntas:
 
-1. **Web app** — onde você conversa com o seu acervo, navega na biblioteca, estuda com flashcards.
-2. **Extensão Chrome** — captura conteúdo de qualquer aba (Kindle Cloud Reader, YouTube, artigos) e empurra para o web app.
+1. **Web app** — onde você conversa com o seu acervo, navega na biblioteca, estuda com flashcards. Livros entram aqui via upload de PDF.
+2. **Extensão Chrome** — captura **vídeos do YouTube**, **episódios de podcast** (Spotify, Apple Podcasts, Overcast, Pocket Casts, Castro) e **artigos** de qualquer página, empurrando tudo para o web app.
 
 > **Status:** UI completa, **sem mocks**. Tudo que aparece é dado real — armazenado em `localStorage` (livros, destaques, conversas, flashcards) ou em `chrome.storage` (capturas vindas da extensão). O backend de extração de PDF + embeddings + LLM ainda não está conectado: por enquanto o chat salva suas perguntas no histórico e responde com um aviso explicando isso.
 
@@ -24,8 +24,8 @@ Composto por duas peças que andam juntas:
     ├── popup.html / popup.css / popup.js
     ├── background.js   # service worker
     └── content/
-        ├── kindle.js          # captura página a página no Kindle Cloud Reader
         ├── youtube.js         # extrai metadata + transcrição
+        ├── podcast.js         # extrai metadata de Spotify, Apple Podcasts, Overcast…
         ├── article.js         # extrai conteúdo principal de qualquer página
         └── webapp-bridge.js   # ponte chrome.storage ↔ web app
 ```
@@ -66,8 +66,10 @@ A extensão escreve capturas em `chrome.storage.local`. Quando o web app está a
 | Tipo | Como funciona |
 |---|---|
 | **YouTube** | Em `youtube.com/watch`: extrai título, canal, duração, thumbnail. Tenta abrir o painel de transcrição automaticamente e capturar o texto. |
-| **Kindle** | Em `read.amazon.com`: captura o texto da página atual. Modo automático observa mudanças no DOM e captura a cada virada de página — útil para percorrer um livro inteiro. |
+| **Podcast** | Em `open.spotify.com/episode`, `podcasts.apple.com`, Overcast, Pocket Casts, Castro: extrai título do episódio, nome do show, duração e descrição/notas via OpenGraph e JSON-LD. |
 | **Artigo / página** | Qualquer outra URL: scoring heurístico para encontrar o conteúdo principal (estilo Readability). Suporta captura de seleção. |
+
+> **Livros** entram pelo web app via upload de PDF — não pela extensão.
 
 Da aba **Capturado** você pode "Adicionar" um item à biblioteca (vira um livro com a fonte/autor da captura) ou "Ignorar" (remove de `chrome.storage`).
 

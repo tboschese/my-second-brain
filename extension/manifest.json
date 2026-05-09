@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Segundo Cérebro — Captura (Kindle · YouTube · Artigos)",
+  "name": "Segundo Cérebro — Captura (YouTube · Podcasts · Artigos)",
   "short_name": "Segundo Cérebro",
-  "version": "1.0.0",
-  "description": "Captura páginas do Kindle, vídeos do YouTube e artigos da web para o seu Segundo Cérebro em localhost:3000.",
+  "version": "1.1.0",
+  "description": "Captura vídeos do YouTube, episódios de podcast (Spotify, Apple Podcasts) e artigos da web para o seu Segundo Cérebro em localhost:3000.",
   "permissions": [
     "storage",
     "activeTab",
@@ -12,19 +12,12 @@
   ],
   "host_permissions": [
     "http://localhost:3000/*",
-    "*://read.amazon.com/*",
-    "*://read.amazon.com.br/*",
-    "*://read.amazon.co.uk/*",
-    "*://read.amazon.de/*",
-    "*://read.amazon.fr/*",
-    "*://read.amazon.es/*",
-    "*://read.amazon.it/*",
-    "*://read.amazon.co.jp/*",
-    "*://read.amazon.com.au/*",
-    "*://read.amazon.com.mx/*",
-    "*://read.amazon.in/*",
-    "*://read.amazon.ca/*",
     "*://www.youtube.com/*",
+    "*://open.spotify.com/*",
+    "*://podcasts.apple.com/*",
+    "*://overcast.fm/*",
+    "*://pca.st/*",
+    "*://castro.fm/*",
     "*://*/*"
   ],
   "action": {
@@ -41,26 +34,20 @@
       "run_at": "document_idle"
     },
     {
-      "matches": [
-        "*://read.amazon.com/*",
-        "*://read.amazon.com.br/*",
-        "*://read.amazon.co.uk/*",
-        "*://read.amazon.de/*",
-        "*://read.amazon.fr/*",
-        "*://read.amazon.es/*",
-        "*://read.amazon.it/*",
-        "*://read.amazon.co.jp/*",
-        "*://read.amazon.com.au/*",
-        "*://read.amazon.com.mx/*",
-        "*://read.amazon.in/*",
-        "*://read.amazon.ca/*"
-      ],
-      "js": ["content/kindle.js"],
+      "matches": ["*://www.youtube.com/watch*"],
+      "js": ["content/youtube.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["*://www.youtube.com/watch*"],
-      "js": ["content/youtube.js"],
+      "matches": [
+        "*://open.spotify.com/episode/*",
+        "*://open.spotify.com/show/*",
+        "*://podcasts.apple.com/*",
+        "*://overcast.fm/*",
+        "*://pca.st/*",
+        "*://castro.fm/*"
+      ],
+      "js": ["content/podcast.js"],
       "run_at": "document_idle"
     }
   ]

@@ -4,7 +4,7 @@ const WEBAPP_URL = 'http://localhost:3000';
 
 // ── SVG helpers ─────────────────────────────────────────────────
 const svgYoutube = `<svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.5 6.5S22.3 5 21.6 4.3c-.7-.8-1.5-.8-1.9-.8C16.8 3.3 12 3.3 12 3.3s-4.8 0-7.7.2c-.4 0-1.2.1-1.9.8C1.7 5 1.5 6.5 1.5 6.5S1.3 8.3 1.3 10v1.6c0 1.7.2 3.5.2 3.5s.2 1.5.9 2.2c.7.8 1.7.7 2.1.8 1.5.1 6.5.2 6.5.2s4.8 0 7.7-.2c.4 0 1.2-.1 1.9-.8.7-.7.9-2.2.9-2.2s.2-1.7.2-3.5V10c0-1.7-.2-3.5-.2-3.5zM9.7 14.3V8.7l5.8 2.8-5.8 2.8z" fill="#FF0000"/></svg>`;
-const svgKindle  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#a45c2c" stroke-width="1.5"/><path d="M8 7h8M8 11h8M8 15h5" stroke="#a45c2c" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+const svgPodcast = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="#a45c2c" stroke-width="1.6"/><path d="M5 11v1a7 7 0 0014 0v-1M12 19v3M9 22h6" stroke="#a45c2c" stroke-width="1.6" stroke-linecap="round"/></svg>`;
 const svgArticle = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#544f42" stroke-width="1.5"/><path d="M7 8h10M7 12h10M7 16h6" stroke="#544f42" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 const svgSparkle = `<svg width="11" height="11" viewBox="0 0 14 14"><path d="M7 1.2l1.5 4.3L12.8 7l-4.3 1.5L7 12.8l-1.5-4.3L1.2 7l4.3-1.5z" fill="#fff"/></svg>`;
 
@@ -18,9 +18,17 @@ function timeAgo(ts) {
   return `${Math.floor(h / 24)}d atrás`;
 }
 
+// ── Type detection ──────────────────────────────────────────────
+function detectType(url) {
+  if (/youtube\.com\/watch/.test(url))     return 'youtube';
+  if (/^https?:\/\/open\.spotify\.com\/(episode|show)\//.test(url)) return 'podcast';
+  if (/^https?:\/\/podcasts\.apple\.com\//.test(url)) return 'podcast';
+  if (/^https?:\/\/(overcast\.fm|pca\.st|castro\.fm)\//.test(url))  return 'podcast';
+  return 'article';
+}
+
 // ── Main init ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  // Open webapp
   document.getElementById('btnOpenApp').addEventListener('click', () => {
     chrome.tabs.create({ url: WEBAPP_URL });
   });
@@ -28,15 +36,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.tabs.create({ url: WEBAPP_URL + '#inbox' });
   });
 
-  // Get active tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const url = tab?.url || '';
-
-  // Match Kindle Cloud Reader on any Amazon TLD (read.amazon.com,
-  // read.amazon.com.br, read.amazon.co.uk, read.amazon.de, etc.)
-  const isKindle  = /^https?:\/\/read\.amazon\./i.test(url);
-  const isYouTube = url.includes('youtube.com/watch');
-  const type      = isKindle ? 'kindle' : isYouTube ? 'youtube' : 'article';
+  const url   = tab?.url || '';
+  const type  = detectType(url);
 
   renderPageCard(tab, type, url);
   await renderCaptureArea(tab, type);
@@ -45,35 +47,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ── Page card ───────────────────────────────────────────────────
 function renderPageCard(tab, type, url) {
-  const iconMap  = { youtube: svgYoutube, kindle: svgKindle, article: svgArticle };
-  const typeMap  = { youtube: 'YouTube', kindle: 'Kindle', article: 'Artigo / Página' };
+  const iconMap  = { youtube: svgYoutube, podcast: svgPodcast, article: svgArticle };
+  const typeMap  = { youtube: 'YouTube',  podcast: 'Podcast',  article: 'Artigo / Página' };
   const hostname = (() => { try { return new URL(url).hostname.replace('www.', ''); } catch { return ''; } })();
 
-  document.getElementById('pageIconWrap').innerHTML      = iconMap[type];
-  document.getElementById('pageTypeLabel').textContent   = typeMap[type];
-  document.getElementById('pageTitle').textContent       = tab?.title?.replace(' - YouTube','').replace(' - Kindle Cloud Reader','') || hostname || 'Página atual';
+  document.getElementById('pageIconWrap').innerHTML    = iconMap[type];
+  document.getElementById('pageTypeLabel').textContent = typeMap[type];
+  document.getElementById('pageTitle').textContent     =
+    (tab?.title || '').replace(/\s*[-–—]\s*YouTube\s*$/i, '').trim()
+    || hostname || 'Página atual';
 }
 
 // ── Capture area ─────────────────────────────────────────────────
 async function renderCaptureArea(tab, type) {
   const area = document.getElementById('captureArea');
-
-  if (type === 'youtube') {
-    await renderYouTubeCapture(area, tab);
-  } else if (type === 'kindle') {
-    await renderKindleCapture(area, tab);
-  } else {
-    renderArticleCapture(area, tab);
-  }
+  if (type === 'youtube')      await renderYouTubeCapture(area, tab);
+  else if (type === 'podcast') await renderPodcastCapture(area, tab);
+  else                         renderArticleCapture(area, tab);
 }
 
 // YouTube ─────────────────────────────────────────────────────────
 async function renderYouTubeCapture(area, tab) {
-  // Try to get video info from content script
   let info = null;
-  try {
-    info = await chrome.tabs.sendMessage(tab.id, { action: 'get-info' });
-  } catch (_) {}
+  try { info = await chrome.tabs.sendMessage(tab.id, { action: 'get-info' }); } catch (_) {}
 
   const thumbUrl = info?.videoId
     ? `https://img.youtube.com/vi/${info.videoId}/mqdefault.jpg`
@@ -93,66 +89,35 @@ async function renderYouTubeCapture(area, tab) {
     </button>
   `;
 
-  area.querySelector('#btnCaptureYt').addEventListener('click', () => captureTab(tab, 'youtube', true));
+  area.querySelector('#btnCaptureYt').addEventListener('click',     () => captureTab(tab, 'youtube', true));
   area.querySelector('#btnCaptureYtDesc').addEventListener('click', () => captureTab(tab, 'youtube', false));
 }
 
-// Kindle ──────────────────────────────────────────────────────────
-async function renderKindleCapture(area, tab) {
-  const { kindleSessions = {} } = await chrome.storage.local.get('kindleSessions');
-  // Title varies by locale: "- Kindle Cloud Reader" (en),
-  // "- Leitor Kindle na Nuvem" (pt-BR), "- Kindle in der Cloud" (de), etc.
-  // Strip everything after the last " - " separator.
-  const bookTitle = (tab?.title || '').replace(/\s*[-–—]\s*[^-–—]+$/, '').trim() || 'Livro atual';
-  const session   = kindleSessions[bookTitle];
-  const pageCount = session?.pages?.length || 0;
-  const { kindleAutoCapture = false } = await chrome.storage.local.get('kindleAutoCapture');
+// Podcast ─────────────────────────────────────────────────────────
+async function renderPodcastCapture(area, tab) {
+  // Inject the podcast content script if it isn't already present
+  // (host_permissions covers all listed podcast hosts).
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files:  ['content/podcast.js'],
+    });
+  } catch (_) {}
+
+  let info = null;
+  try { info = await chrome.tabs.sendMessage(tab.id, { action: 'get-info' }); } catch (_) {}
 
   area.innerHTML = `
-    <div class="kindle-meta">
-      <div>
-        <div class="kindle-meta-label">Capturando</div>
-        <div style="font-size:11px;color:var(--ink2);margin-top:1px;font-style:italic;">${escHtml(bookTitle)}</div>
-      </div>
-      <span class="kindle-page-count">${pageCount} ${pageCount === 1 ? 'página' : 'páginas'}</span>
+    <div class="cap-meta">
+      ${info?.show ? `<div><div class="cap-meta-label">Show</div><div class="cap-meta-value">${escHtml(info.show)}</div></div>` : ''}
+      ${info?.duration ? `<span class="cap-meta-pill">${escHtml(info.duration)}</span>` : ''}
     </div>
-    <button class="btn-capture" id="btnCaptureKindlePage">
-      ${svgKindle.replace('a45c2c','fff').replace('a45c2c','fff')}
-      Capturar página atual
+    <button class="btn-capture" id="btnCapturePod">
+      ${svgSparkle} Capturar episódio
     </button>
-    <div class="toggle-row" style="margin-top:8px;">
-      <div>
-        <div class="toggle-label">Captura automática</div>
-        <div class="toggle-sub">Captura cada página ao virar</div>
-      </div>
-      <button class="toggle ${kindleAutoCapture ? 'on' : ''}" id="toggleAutoCapture"></button>
-    </div>
-    ${pageCount > 0 ? `
-      <div style="margin-top:10px;">
-        <div class="progress-row">
-          <span>Páginas capturadas</span>
-          <span>${pageCount}</span>
-        </div>
-        <button class="btn-capture secondary" id="btnFinalizeKindle">Finalizar e adicionar à biblioteca</button>
-      </div>
-    ` : ''}
   `;
 
-  area.querySelector('#btnCaptureKindlePage').addEventListener('click', () => captureTab(tab, 'kindle'));
-
-  const toggle = area.querySelector('#toggleAutoCapture');
-  toggle.addEventListener('click', async () => {
-    const newVal = !toggle.classList.contains('on');
-    toggle.classList.toggle('on', newVal);
-    await chrome.storage.local.set({ kindleAutoCapture: newVal });
-    try {
-      await chrome.tabs.sendMessage(tab.id, { action: newVal ? 'start-auto-capture' : 'stop-auto-capture' });
-    } catch (_) {}
-  });
-
-  if (area.querySelector('#btnFinalizeKindle')) {
-    area.querySelector('#btnFinalizeKindle').addEventListener('click', () => finalizeKindleBook(bookTitle));
-  }
+  area.querySelector('#btnCapturePod').addEventListener('click', () => captureTab(tab, 'podcast'));
 }
 
 // Article / generic ───────────────────────────────────────────────
@@ -175,16 +140,14 @@ async function captureTab(tab, type, withTranscript = true) {
   if (btn) { btn.innerHTML = '<div class="spinner"></div>'; btn.disabled = true; }
 
   try {
-    // Inject content script if needed
     try {
       await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        files: [`content/${type}.js`],
+        files:  [`content/${type}.js`],
       });
     } catch (_) { /* already injected */ }
 
     const result = await chrome.tabs.sendMessage(tab.id, { action: 'capture', withTranscript });
-
     if (result) {
       await saveCapture(result);
       await renderRecentList();
@@ -200,7 +163,7 @@ async function captureSelection(tab) {
   try {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      files: ['content/article.js'],
+      files:  ['content/article.js'],
     });
     const result = await chrome.tabs.sendMessage(tab.id, { action: 'capture-selection' });
     if (result) {
@@ -213,43 +176,18 @@ async function captureSelection(tab) {
   }
 }
 
-async function finalizeKindleBook(bookTitle) {
-  const { kindleSessions = {} } = await chrome.storage.local.get('kindleSessions');
-  const session = kindleSessions[bookTitle];
-  if (!session) return;
-
-  const fullText = session.pages.map(p => p.text).join('\n\n---\n\n');
-  await saveCapture({
-    type:       'kindle',
-    title:      bookTitle,
-    content:    fullText,
-    url:        `kindle://${bookTitle}`,
-    source:     'Kindle',
-    pages:      session.pages.map(p => p.page),
-    pageCount:  session.pages.length,
-  });
-
-  // Clear session
-  delete kindleSessions[bookTitle];
-  await chrome.storage.local.set({ kindleSessions });
-  await renderRecentList();
-  showToast(`"${bookTitle}" adicionado! ✓`);
-}
-
 // ── Storage helpers ──────────────────────────────────────────────
 async function saveCapture(data) {
   const { captures = [] } = await chrome.storage.local.get('captures');
   const item = {
-    id:          Date.now().toString(36) + Math.random().toString(36).slice(2),
-    capturedAt:  Date.now(),
-    status:      'pending',
+    id:         Date.now().toString(36) + Math.random().toString(36).slice(2),
+    capturedAt: Date.now(),
+    status:     'pending',
     ...data,
   };
   captures.unshift(item);
-  // Keep last 50
   if (captures.length > 50) captures.splice(50);
   await chrome.storage.local.set({ captures });
-  // Update badge
   const pending = captures.filter(c => c.status === 'pending').length;
   chrome.action.setBadgeText({ text: pending > 0 ? String(pending) : '' });
   chrome.action.setBadgeBackgroundColor({ color: '#a45c2c' });
@@ -266,7 +204,7 @@ async function renderRecentList() {
     return;
   }
 
-  const iconMap = { youtube: svgYoutube, kindle: svgKindle, article: svgArticle };
+  const iconMap = { youtube: svgYoutube, podcast: svgPodcast, article: svgArticle };
 
   list.innerHTML = captures.slice(0, 6).map(c => `
     <div class="recent-item">

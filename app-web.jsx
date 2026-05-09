@@ -42,7 +42,7 @@ const I = {
   upload:   ({s=16,c=C.ink2})         => <svg width={s} height={s} viewBox="0 0 18 18"><path d="M9 12V4m0 0L6 7m3-3l3 3M3 14v1a1 1 0 001 1h10a1 1 0 001-1v-1" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>,
   trash:    ({s=14,c=C.ink3})         => <svg width={s} height={s} viewBox="0 0 16 16"><path d="M3 5h10M6 5V3h4v2M5 5l1 9h4l1-9" stroke={c} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>,
   youtube:  ({s=16})                  => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M22.5 6.5S22.3 5 21.6 4.3c-.7-.8-1.5-.8-1.9-.8C16.8 3.3 12 3.3 12 3.3s-4.8 0-7.7.2c-.4 0-1.2.1-1.9.8C1.7 5 1.5 6.5 1.5 6.5S1.3 8.3 1.3 10v1.6c0 1.7.2 3.5.2 3.5s.2 1.5.9 2.2c.7.8 1.7.7 2.1.8 1.5.1 6.5.2 6.5.2s4.8 0 7.7-.2c.4 0 1.2-.1 1.9-.8.7-.7.9-2.2.9-2.2s.2-1.7.2-3.5V10c0-1.7-.2-3.5-.2-3.5zM9.7 14.3V8.7l5.8 2.8-5.8 2.8z" fill="#FF0000"/></svg>,
-  kindle:   ({s=16,c=C.accent})       => <svg width={s} height={s} viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2" stroke={c} strokeWidth="1.5" fill="none"/><path d="M8 7h8M8 11h8M8 15h5" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  podcast:  ({s=16,c=C.accent})       => <svg width={s} height={s} viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke={c} strokeWidth="1.6"/><path d="M5 11v1a7 7 0 0014 0v-1M12 19v3M9 22h6" stroke={c} strokeWidth="1.6" strokeLinecap="round"/></svg>,
   article:  ({s=16,c=C.ink2})         => <svg width={s} height={s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke={c} strokeWidth="1.5" fill="none"/><path d="M7 8h10M7 12h10M7 16h6" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>,
   chat:     (a)                        => <svg width="18" height="18" viewBox="0 0 24 24"><path d="M4 7a3 3 0 013-3h10a3 3 0 013 3v8a3 3 0 01-3 3h-5l-4 3v-3H7a3 3 0 01-3-3V7z" stroke={a?C.accent:'rgba(250,247,239,0.45)'} strokeWidth="1.6" fill={a?C.accentFaint:'none'} strokeLinejoin="round"/></svg>,
   lib:      (a)                        => <svg width="18" height="18" viewBox="0 0 24 24"><path d="M5 4h3v16H5zM9 4h3v16H9zM14 5l3-1 4 15-3 1z" stroke={a?C.accent:'rgba(250,247,239,0.45)'} strokeWidth="1.6" fill="none" strokeLinejoin="round"/></svg>,
@@ -268,7 +268,7 @@ function ChatEmpty({ books, onAsk }) {
       </h1>
       <p style={{fontFamily: F.serif, fontSize: 15, fontStyle: 'italic', color: C.ink2, margin: '16px 0 0', lineHeight: 1.5}}>
         {books.length === 0
-          ? 'Adicione PDFs na Biblioteca ou capture páginas do Kindle, vídeos do YouTube e artigos com a extensão Chrome.'
+          ? 'Adicione PDFs na Biblioteca ou capture vídeos do YouTube, podcasts e artigos com a extensão Chrome.'
           : `${books.length} ${books.length === 1 ? 'livro está' : 'livros estão'} prontos para consulta.`
         }
       </p>
@@ -405,7 +405,7 @@ function LibraryScreen({ books, highlights, onOpenBook, onAdd }) {
           <EmptyState
             icon={<I.lib a={false}/>}
             title="Sua biblioteca está vazia"
-            description="Adicione PDFs aqui ou capture conteúdo (Kindle, YouTube, artigos) com a extensão Chrome."
+            description="Adicione PDFs aqui ou capture conteúdo (YouTube, podcasts, artigos) com a extensão Chrome."
             action={{label: 'Adicionar primeiro livro', onClick: onAdd}}
           />
         ) : filtered.length === 0 ? (
@@ -900,10 +900,10 @@ function InboxScreen({ captures, onAdd, onIgnore, onMarkDone }) {
 
   const typeIcon = (type) => {
     if (type === 'youtube') return <I.youtube s={16}/>;
-    if (type === 'kindle')  return <I.kindle  s={16}/>;
+    if (type === 'podcast') return <I.podcast s={16}/>;
     return <I.article s={16}/>;
   };
-  const typeLabel = { youtube: 'YouTube', kindle: 'Kindle', article: 'Artigo', webpage: 'Página web' };
+  const typeLabel = { youtube: 'YouTube', podcast: 'Podcast', article: 'Artigo', webpage: 'Página web' };
 
   return (
     <div style={{height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
@@ -921,7 +921,7 @@ function InboxScreen({ captures, onAdd, onIgnore, onMarkDone }) {
           <EmptyState
             icon={<I.inbox a={false}/>}
             title="Nenhum item capturado ainda"
-            description="Instale a extensão Chrome (pasta extension/) e comece a capturar vídeos do YouTube, páginas do Kindle e artigos. Eles aparecem aqui em tempo real."
+            description="Instale a extensão Chrome (pasta extension/) e comece a capturar vídeos do YouTube, episódios de podcast e artigos. Eles aparecem aqui em tempo real."
           />
         ) : (
           <div style={{display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 780}}>
@@ -1047,12 +1047,16 @@ function App() {
   };
 
   const addCaptureAsBook = (cap) => {
+    const authorFallback = cap.type === 'youtube' ? 'YouTube'
+                         : cap.type === 'podcast' ? (cap.show || 'Podcast')
+                         : 'Web';
+    const tagFor = { youtube: ['vídeo'], podcast: ['podcast'], article: ['artigo'] }[cap.type] || [];
     store.addBook({
       title:     cap.title || cap.source || 'Captura',
-      author:    cap.author || cap.channel || (cap.type === 'youtube' ? 'YouTube' : cap.type === 'kindle' ? 'Kindle' : 'Web'),
+      author:    cap.author || cap.channel || cap.show || authorFallback,
       source:    cap.type,
       sourceUrl: cap.url || null,
-      tags:      cap.type === 'youtube' ? ['vídeo'] : cap.type === 'article' ? ['artigo'] : [],
+      tags:      tagFor,
     });
     if (cap.content) {
       const books = store.getBooks();
