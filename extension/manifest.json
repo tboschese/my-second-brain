@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Segundo Cérebro",
+  "name": "Segundo Cérebro — Captura (Kindle · YouTube · Artigos)",
+  "short_name": "Segundo Cérebro",
   "version": "1.0.0",
-  "description": "Capture vídeos, páginas do Kindle e artigos para o seu Segundo Cérebro.",
+  "description": "Captura páginas do Kindle, vídeos do YouTube e artigos da web para o seu Segundo Cérebro em localhost:3000.",
   "permissions": [
     "storage",
     "activeTab",
@@ -17,7 +18,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Segundo Cérebro"
+    "default_title": "Segundo Cérebro — Capturar esta página"
   },
   "background": {
     "service_worker": "background.js"
