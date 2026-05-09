@@ -4,10 +4,10 @@ Um app de "segundo cérebro" para consultar PDFs, vídeos do YouTube, páginas d
 
 Composto por duas peças que andam juntas:
 
-1. **Web app** (desktop) — onde você conversa com o seu acervo, navega na biblioteca, estuda com flashcards.
+1. **Web app** — onde você conversa com o seu acervo, navega na biblioteca, estuda com flashcards.
 2. **Extensão Chrome** — captura conteúdo de qualquer aba (Kindle Cloud Reader, YouTube, artigos) e empurra para o web app.
 
-> Status: protótipo navegável. UI completa com dados mock; backend (embeddings, vetor store, LLM) ainda não conectado.
+> **Status:** UI completa, **sem mocks**. Tudo que aparece é dado real — armazenado em `localStorage` (livros, destaques, conversas, flashcards) ou em `chrome.storage` (capturas vindas da extensão). O backend de extração de PDF + embeddings + LLM ainda não está conectado: por enquanto o chat salva suas perguntas no histórico e responde com um aviso explicando isso.
 
 ---
 
@@ -15,22 +15,19 @@ Composto por duas peças que andam juntas:
 
 ```
 .
-├── index.html                  # entry do web app desktop
-├── app-web.jsx                 # app desktop completo (sidebar + 5 telas)
-├── data.jsx                    # dados mock compartilhados (livros, citações, flashcards)
+├── index.html          # entry do web app
+├── app-web.jsx         # app completo (sidebar + 5 telas + modais)
+├── data.jsx            # store localStorage + hook useStore()
 │
-├── Segundo Cerebro Mobile.html # versão mobile (iPhone) preservada
-├── prototype-app.jsx           # app mobile completo
-│
-└── extension/                  # Chrome extension MV3
+└── extension/          # Chrome extension MV3
     ├── manifest.json
     ├── popup.html / popup.css / popup.js
-    ├── background.js           # service worker
+    ├── background.js   # service worker
     └── content/
-        ├── kindle.js           # captura página a página no Kindle Cloud Reader
-        ├── youtube.js          # extrai metadata + transcrição
-        ├── article.js          # extrai conteúdo principal de qualquer página
-        └── webapp-bridge.js    # ponte chrome.storage ↔ web app
+        ├── kindle.js          # captura página a página no Kindle Cloud Reader
+        ├── youtube.js         # extrai metadata + transcrição
+        ├── article.js         # extrai conteúdo principal de qualquer página
+        └── webapp-bridge.js   # ponte chrome.storage ↔ web app
 ```
 
 ---
@@ -41,21 +38,28 @@ Não tem build — é React + Babel via CDN. Basta servir os arquivos estáticos
 
 ```bash
 python3 -m http.server 3000
+# abre http://localhost:3000/index.html
 ```
 
-Abra `http://localhost:3000/index.html`.
+Na primeira abertura tudo fica vazio:
 
-A versão mobile fica em `http://localhost:3000/Segundo Cerebro Mobile.html`.
+- **Conversar** → "Comece a construir seu segundo cérebro"
+- **Biblioteca** → "Sua biblioteca está vazia · Adicionar primeiro livro"
+- **Estudo** → "Nenhum flashcard ainda"
+- **Histórico** → "Sem conversas ainda"
+- **Capturado** → "Nenhum item capturado ainda"
+
+Adicione um PDF pela Biblioteca (extraímos nome do arquivo + número de páginas; você completa título e autor) ou capture algo via extensão.
 
 ---
 
 ## Instalando a extensão
 
 1. Abra `chrome://extensions`
-2. Ative "Modo do desenvolvedor" (canto superior direito)
+2. Ative "Modo do desenvolvedor"
 3. Clique em **"Carregar sem compactação"** e selecione a pasta `extension/`
 
-A extensão se conecta ao web app rodando em `localhost:3000`. Capturas feitas via popup aparecem em tempo real na aba **Capturado** do app.
+A extensão escreve capturas em `chrome.storage.local`. Quando o web app está aberto em `localhost:3000`, o `webapp-bridge.js` é injetado e re-emite as capturas como eventos `sc-captures` no `window` — o app escuta e renderiza em tempo real na aba **Capturado**.
 
 ### O que cada captura faz
 
@@ -63,7 +67,9 @@ A extensão se conecta ao web app rodando em `localhost:3000`. Capturas feitas v
 |---|---|
 | **YouTube** | Em `youtube.com/watch`: extrai título, canal, duração, thumbnail. Tenta abrir o painel de transcrição automaticamente e capturar o texto. |
 | **Kindle** | Em `read.amazon.com`: captura o texto da página atual. Modo automático observa mudanças no DOM e captura a cada virada de página — útil para percorrer um livro inteiro. |
-| **Artigo / página** | Qualquer outra URL: scoring heurístico para encontrar o conteúdo principal (igual Readability). Suporta captura de seleção. |
+| **Artigo / página** | Qualquer outra URL: scoring heurístico para encontrar o conteúdo principal (estilo Readability). Suporta captura de seleção. |
+
+Da aba **Capturado** você pode "Adicionar" um item à biblioteca (vira um livro com a fonte/autor da captura) ou "Ignorar" (remove de `chrome.storage`).
 
 ---
 
@@ -72,13 +78,14 @@ A extensão se conecta ao web app rodando em `localhost:3000`. Capturas feitas v
 - **Estética:** editorial moderno — papel quente, tipografia séria, sensação de biblioteca pessoal.
 - **Cores:** base bege `#faf7ef`, tinta quase-preta `#1f1c14`, acento âmbar `#a45c2c`.
 - **Fontes:** Newsreader (serif editorial) para corpo e títulos, Inter para UI, JetBrains Mono para metadados.
-- **Citações:** numerinhos `[1]` inline → ao clicar abrem painel lateral (desktop) ou bottom sheet (mobile) com o trecho exato + livro + página.
+
+Cada livro recebe uma cor de capa do palette em `data.jsx` (round-robin), então toda lombada fica distinta sem precisar pedir nada ao usuário.
 
 ---
 
 ## Próximos passos
 
-- Backend: pipeline de embeddings (PDFs, transcrições, artigos) + vetor store + LLM com citações.
-- Processamento de capturas pendentes na fila.
-- Modo offline / sincronização.
-- Ícones da extensão (PNG 16/32/48/128).
+- **Backend.** Pipeline de extração (PDF → texto → chunks → embeddings) + vetor store + LLM. O chat hoje grava a pergunta no histórico e devolve um aviso de "backend não conectado" — pronto para reprocessar quando estiver online.
+- **Citações vivas.** Quando o backend voltar respostas com referências, renderizar `[1]` inline e abrir o painel lateral com o trecho exato (componente `CitationPanel` já estava modelado).
+- **Geração de flashcards** a partir de uma resposta no chat (botão "Salvar como flashcard").
+- **Ícones da extensão** (PNG 16/32/48/128).
